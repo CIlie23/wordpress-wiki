@@ -1,0 +1,6 @@
+wp-config.php
+node_modules/
+.htaccess
+sitemap.xml
+sitemap.xml.gz
+atatus.php
