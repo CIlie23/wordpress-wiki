@@ -94,6 +94,10 @@ function iknowledgebase_widgets_init() {
 }
 
 add_action( 'widgets_init', 'iknowledgebase_widgets_init' );
+
+add_action('rest_api_init', function() {
+    header("Access-Control-Allow-Origin: *");
+});
 // Include Theme Info page.
 require get_template_directory() . '/includes/theme-info.php';
 

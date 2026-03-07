@@ -10,7 +10,7 @@ services:
       WORDPRESS_DB_PASSWORD: password
       WORDPRESS_DB_NAME: dbwordpress
     volumes:
-      - wordpress:/var/www/html
+      - .:/var/www/html
 
   db:
     image: mysql:8.0
@@ -24,4 +24,5 @@ services:
       - db:/var/lib/mysql
 
 volumes:
-  - .:/var/www/html
+  wordpress:
+  db:
