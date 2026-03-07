@@ -1,5 +1,4 @@
 services:
-
   wordpress:
     image: wordpress
     restart: always
@@ -20,10 +19,9 @@ services:
       MYSQL_DATABASE: dbwordpress
       MYSQL_USER: cilie
       MYSQL_PASSWORD: password
-      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+      MYSQL_RANDOM_ROOT_PASSWORD: "1"
     volumes:
       - db:/var/lib/mysql
 
 volumes:
-  wordpress:
-  db:
+  - .:/var/www/html
