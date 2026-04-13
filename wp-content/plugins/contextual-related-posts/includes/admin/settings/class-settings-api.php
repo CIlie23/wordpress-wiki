@@ -18,7 +18,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Settings API wrapper class
  *
- * @version 2.8.0
+ * @version 2.8.2
  */
 class Settings_API {
 
@@ -27,7 +27,7 @@ class Settings_API {
 	 *
 	 * @var   string
 	 */
-	public const VERSION = '2.8.0';
+	public const VERSION = '2.8.2';
 
 	/**
 	 * Settings Key.
@@ -483,7 +483,7 @@ class Settings_API {
 		wp_register_script(
 			'wz-' . $this->prefix . '-admin',
 			plugins_url( 'js/settings-admin-scripts' . $minimize . '.js', __FILE__ ),
-			array( 'jquery' ),
+			array( 'jquery', 'wp-color-picker', 'jquery-ui-tabs' ),
 			self::VERSION,
 			true
 		);
@@ -495,23 +495,16 @@ class Settings_API {
 			true
 		);
 		wp_register_script(
-			'wz-' . $this->prefix . '-taxonomy-suggest',
-			plugins_url( 'js/taxonomy-suggest' . $minimize . '.js', __FILE__ ),
-			array( 'jquery' ),
-			self::VERSION,
-			true
-		);
-		wp_register_script(
 			'wz-' . $this->prefix . '-media-selector',
 			plugins_url( 'js/media-selector' . $minimize . '.js', __FILE__ ),
-			array( 'jquery' ),
+			array( 'jquery', 'media-editor', 'media-views' ),
 			self::VERSION,
 			true
 		);
 		wp_register_style(
 			'wz-' . $this->prefix . '-admin',
 			plugins_url( 'css/admin-style' . $minimize . '.css', __FILE__ ),
-			array(),
+			array( 'wp-color-picker' ),
 			self::VERSION
 		);
 
@@ -563,13 +556,7 @@ class Settings_API {
 	 */
 	public static function enqueue_scripts_styles( $prefix, $args = array() ) {
 
-		wp_enqueue_style( 'wp-color-picker' );
-
 		wp_enqueue_media();
-		wp_enqueue_script( 'wp-color-picker' );
-		wp_enqueue_script( 'jquery' );
-		wp_enqueue_script( 'jquery-ui-autocomplete' );
-		wp_enqueue_script( 'jquery-ui-tabs' );
 
 		wp_enqueue_code_editor(
 			array(
@@ -583,7 +570,6 @@ class Settings_API {
 
 		wp_enqueue_script( "wz-{$prefix}-admin" );
 		wp_enqueue_script( "wz-{$prefix}-codemirror" );
-		wp_enqueue_script( "wz-{$prefix}-taxonomy-suggest" );
 		wp_enqueue_script( "wz-{$prefix}-media-selector" );
 
 		// Enqueue Tom Select.
@@ -866,6 +852,7 @@ class Settings_API {
 
 		// Get the various settings we've registered.
 		$settings       = get_option( $this->settings_key );
+		$settings       = is_array( $settings ) ? $settings : array();
 		$settings_types = $this->get_registered_settings_types();
 
 		// Get the tab. This is also our settings' section.
@@ -896,18 +883,15 @@ class Settings_API {
 				continue;
 			}
 
-			if ( array_key_exists( $key, $output ) ) {
+			if ( array_key_exists( $key, $input ) ) {
 				$sanitize_callback = $this->get_sanitize_callback( $key );
 
 				// If callback is set, call it.
 				if ( $sanitize_callback ) {
-					// Pass the field configuration for repeater fields.
-					if ( 'repeater' === $type && isset( $this->registered_settings[ $key ] ) ) {
-						$output[ $key ] = call_user_func( $sanitize_callback, $output[ $key ], $this->registered_settings[ $key ] );
-					} elseif ( 'sensitive' === $type ) {
-						$output[ $key ] = call_user_func( $sanitize_callback, $output[ $key ], $key );
+					if ( 'sensitive' === $type ) {
+						$output[ $key ] = call_user_func( $sanitize_callback, $input[ $key ], $key );
 					} else {
-						$output[ $key ] = call_user_func( $sanitize_callback, $output[ $key ] );
+						$output[ $key ] = call_user_func( $sanitize_callback, $input[ $key ] );
 					}
 					continue;
 				}
@@ -945,7 +929,15 @@ class Settings_API {
 				<?php do_action( $this->prefix . '_settings_page_header_before' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound ?>
 				<h1><?php echo esc_html( $this->translation_strings['page_header'] ); ?></h1>
 				<?php do_action( $this->prefix . '_settings_page_header' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound ?>
-				<?php settings_errors( $this->prefix . '-notices' ); ?>
+
+				<?php
+				// WordPress automatically calls settings_errors() on Settings pages.
+				// Only call it manually on custom menu pages to prevent duplicates.
+				$current_screen = get_current_screen();
+				if ( $current_screen && 0 !== strpos( $current_screen->base, 'settings_page_' ) ) {
+					settings_errors( $this->prefix . '-notices' );
+				}
+				?>
 
 				<div id="poststuff">
 				<div id="post-body" class="metabox-holder columns-2">
@@ -1162,7 +1154,7 @@ class Settings_API {
 	 * @param string $prefix Optional prefix for fallback key.
 	 * @return string The encryption key.
 	 */
-	private static function get_encryption_key( $prefix = '' ) {
+	public static function get_encryption_key( $prefix = '' ) {
 		$fallback = $prefix ? str_replace( '-', '_', $prefix ) . '_encryption_fallback' : 'settings_api_encryption_fallback';
 		return defined( 'AUTH_SALT' ) ? AUTH_SALT : ( defined( 'SECURE_AUTH_SALT' ) ? SECURE_AUTH_SALT : hash( 'sha256', __NAMESPACE__ . $fallback ) );
 	}

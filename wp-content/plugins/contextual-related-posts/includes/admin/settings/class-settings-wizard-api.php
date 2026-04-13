@@ -126,6 +126,7 @@ class Settings_Wizard_API {
 	 *     @type string $page_slug            Wizard page slug.
 	 *     @type array  $menu_args           Menu arguments array with parent and capability.
 	 *     @type bool   $hide_when_completed Whether to hide the wizard submenu item after completion.
+	 *     @type bool   $show_in_menu        Whether to show the wizard in the admin menu.
 	 * }
 	 */
 	public function __construct( $settings_key, $prefix, $args = array() ) {
@@ -139,6 +140,7 @@ class Settings_Wizard_API {
 			'admin_menu_position' => 999,
 			'page_slug'           => "{$prefix}_wizard",
 			'hide_when_completed' => true,
+			'show_in_menu'        => true,
 			'menu_args'           => array(
 				'parent'     => '', // Empty for dashboard, or parent slug for submenu.
 				'capability' => 'manage_options',
@@ -233,9 +235,11 @@ class Settings_Wizard_API {
 			array( $this, 'render_wizard_page' )
 		);
 
-		$hide_when_completed = isset( $this->args['hide_when_completed'] ) ? (bool) $this->args['hide_when_completed'] : true;
-		if ( $hide_when_completed && $this->is_wizard_completed() ) {
-			add_action( 'admin_head', array( $this, 'hide_completed_wizard_submenu' ) );
+		$hide_submenu = ( isset( $this->args['show_in_menu'] ) && ! $this->args['show_in_menu'] ) ||
+			( ( $this->args['hide_when_completed'] ?? true ) && $this->is_wizard_completed() );
+
+		if ( $hide_submenu ) {
+			add_action( 'admin_enqueue_scripts', array( $this, 'hide_completed_wizard_submenu' ) );
 		}
 	}
 
@@ -245,18 +249,12 @@ class Settings_Wizard_API {
 	 * @return void
 	 */
 	public function hide_completed_wizard_submenu() {
-		if ( ! $this->is_wizard_completed() ) {
-			return;
-		}
 		$slug = sanitize_key( $this->page_slug );
-		?>
-		<style>
-			#adminmenu a[href$="page=<?php echo esc_attr( $slug ); ?>"],
-			#adminmenu a[href*="page=<?php echo esc_attr( $slug ); ?>&"] {
+		$css  = '#adminmenu a[href$="page=' . $slug . '"],
+			#adminmenu a[href*="page=' . $slug . '&"] {
 				display: none;
-			}
-		</style>
-		<?php
+			}';
+		wp_add_inline_style( 'wp-admin', $css );
 	}
 
 	/**

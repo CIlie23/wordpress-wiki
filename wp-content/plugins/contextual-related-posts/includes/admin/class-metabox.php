@@ -107,16 +107,16 @@ class Metabox {
 		wp_nonce_field( 'crp_meta_box', 'crp_meta_box_nonce' );
 
 		// Get the thumbnail settings. The name of the meta key is defined in thumb_meta parameter of the CRP Settings array.
-		$thumb_meta = get_post_meta( $post->ID, crp_get_option( 'thumb_meta' ), true );
+		$thumb_meta = crp_get_meta( $post->ID, crp_get_option( 'thumb_meta' ) );
 		$value      = ( $thumb_meta ) ? $thumb_meta : '';
 
 		// Get related posts specific meta.
-		$disable_here      = get_post_meta( $post->ID, '_crp_disable_here', true );
-		$exclude_this_post = get_post_meta( $post->ID, '_crp_exclude_this_post', true );
-		$keyword           = get_post_meta( $post->ID, '_crp_keyword', true );
-		$exclude_words     = get_post_meta( $post->ID, '_crp_exclude_words', true );
-		$manual_related    = get_post_meta( $post->ID, '_crp_manual_related', true );
-		$exclude_post_ids  = get_post_meta( $post->ID, '_crp_exclude_post_ids', true );
+		$disable_here      = crp_get_meta( $post->ID, 'disable_here' );
+		$exclude_this_post = crp_get_meta( $post->ID, 'exclude_this_post' );
+		$keyword           = crp_get_meta( $post->ID, 'keyword' );
+		$exclude_words     = crp_get_meta( $post->ID, 'exclude_words' );
+		$manual_related    = crp_get_meta( $post->ID, 'manual_related' );
+		$exclude_post_ids  = crp_get_meta( $post->ID, 'exclude_post_ids' );
 
 		// Disable display option.
 		$disable_here = ( $disable_here ) ? $disable_here : 0;
@@ -469,12 +469,16 @@ class Metabox {
 				array( 'dashicons' ),
 				WZ_CRP_VERSION
 			);
-			wp_enqueue_script(
-				'wz-taxonomy-suggest-js',
-				WZ_CRP_PLUGIN_URL . "includes/admin/settings/js/taxonomy-suggest{$file_prefix}.js",
-				array( 'jquery' ),
-				WZ_CRP_VERSION,
-				true
+
+			// Enqueue Tom Select using Settings_API method.
+			\WebberZone\Contextual_Related_Posts\Admin\Settings\Settings_API::enqueue_scripts_styles(
+				'crp',
+				array(
+					'strings' => array(
+						/* translators: %s: search term */
+						'no_results' => esc_html__( 'No results found for "%s"', 'contextual-related-posts' ),
+					),
+				)
 			);
 		}
 	}

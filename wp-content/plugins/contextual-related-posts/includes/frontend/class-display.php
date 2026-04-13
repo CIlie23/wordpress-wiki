@@ -189,7 +189,7 @@ class Display {
 		 */
 		$post_classes = apply_filters( 'crp_post_class', $post_classes, $args, $post );
 
-		$output = '<div class="' . $post_classes . '">';
+		$output = '<div class="' . esc_attr( $post_classes ) . '">';
 
 		if ( $results ) {
 			$loop_counter = 0;
@@ -1013,7 +1013,7 @@ class Display {
 		$add_to = \crp_get_option( 'add_to', array( 'single', 'page' ) );
 		$add_to = wp_parse_list( $add_to );
 
-		$limit_feed         = \crp_get_option( 'limit_feed' );
+		$limit_feed         = (int) \crp_get_option( 'limit_feed' );
 		$show_excerpt_feed  = \crp_get_option( 'show_excerpt_feed' );
 		$post_thumb_op_feed = \crp_get_option( 'post_thumb_op_feed' );
 

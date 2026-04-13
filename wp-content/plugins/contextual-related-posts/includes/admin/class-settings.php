@@ -204,8 +204,7 @@ class Settings {
 		foreach ( $sections as $section => $value ) {
 			$method_name = 'settings_' . $section;
 			if ( method_exists( __CLASS__, $method_name ) ) {
-				$instance             = new self();
-				$settings[ $section ] = $instance->$method_name();
+				$settings[ $section ] = self::$method_name();
 			}
 		}
 
@@ -226,7 +225,7 @@ class Settings {
 	 *
 	 * @return array General settings array
 	 */
-	public function settings_general() {
+	public static function settings_general() {
 		$settings = array(
 			'list_general_header'          => array(
 				'id'   => 'list_general_header',
@@ -368,7 +367,7 @@ class Settings {
 	 *
 	 * @return array Output settings array
 	 */
-	public function settings_output() {
+	public static function settings_output() {
 		$settings = array(
 			'title'                 => array(
 				'id'      => 'title',
@@ -548,7 +547,7 @@ class Settings {
 	 *
 	 * @return array List Tuning settings array
 	 */
-	public function settings_list() {
+	public static function settings_list() {
 		$settings = array(
 			'list_general_header'       => array(
 				'id'   => 'list_general_header',
@@ -569,17 +568,16 @@ class Settings {
 				'name'    => esc_html__( 'Number of posts to display', 'contextual-related-posts' ),
 				'desc'    => esc_html__( 'Maximum number of posts that will be displayed in the list. This option is used if you do not specify the number of posts in the widget or shortcodes', 'contextual-related-posts' ),
 				'type'    => 'number',
-				'default' => '6',
-				'min'     => '0',
-				'size'    => 'small',
+				'default' => 6,
+				'min'     => 1,
 			),
 			'daily_range'               => array(
 				'id'      => 'daily_range',
 				'name'    => esc_html__( 'Related posts should be newer than', 'contextual-related-posts' ),
 				'desc'    => esc_html__( 'This sets the cut-off period for which posts will be displayed. e.g. setting it to 365 will show related posts from the last year only. Set to 0 to disable limiting posts by date.', 'contextual-related-posts' ),
 				'type'    => 'number',
-				'default' => '0',
-				'min'     => '0',
+				'default' => 0,
+				'min'     => 0,
 			),
 			'ordering'                  => array(
 				'id'      => 'ordering',
@@ -615,7 +613,7 @@ class Settings {
 				'desc'    => __( 'The weight to give to the post title when calculating the relevance of the post.', 'contextual-related-posts' ),
 				'type'    => 'number',
 				'default' => 10,
-				'min'     => '0',
+				'min'     => 0,
 				'size'    => 'small',
 				'pro'     => true,
 			),
@@ -625,7 +623,7 @@ class Settings {
 				'desc'    => __( 'The weight to give to the post content when calculating the relevance of the post. This may make the query take longer to process.', 'contextual-related-posts' ),
 				'type'    => 'number',
 				'default' => 0,
-				'min'     => '0',
+				'min'     => 0,
 				'size'    => 'small',
 				'pro'     => true,
 			),
@@ -635,7 +633,7 @@ class Settings {
 				'desc'    => __( 'The weight to give to the post excerpt when calculating the relevance of the post.', 'contextual-related-posts' ),
 				'type'    => 'number',
 				'default' => 0,
-				'min'     => '0',
+				'min'     => 0,
 				'size'    => 'small',
 				'pro'     => true,
 			),
@@ -645,7 +643,7 @@ class Settings {
 				'desc'    => __( 'Weight to give category matches when calculating relevance.', 'contextual-related-posts' ),
 				'type'    => 'number',
 				'default' => 0,
-				'min'     => '0',
+				'min'     => 0,
 				'size'    => 'small',
 				'pro'     => true,
 			),
@@ -655,7 +653,7 @@ class Settings {
 				'desc'    => __( 'Weight to give tag matches when calculating relevance.', 'contextual-related-posts' ),
 				'type'    => 'number',
 				'default' => 0,
-				'min'     => '0',
+				'min'     => 0,
 				'size'    => 'small',
 				'pro'     => true,
 			),
@@ -665,7 +663,7 @@ class Settings {
 				'desc'    => __( 'Weight to give other taxonomy matches when calculating relevance.', 'contextual-related-posts' ),
 				'type'    => 'number',
 				'default' => 0,
-				'min'     => '0',
+				'min'     => 0,
 				'size'    => 'small',
 				'pro'     => true,
 			),
@@ -675,7 +673,7 @@ class Settings {
 				'desc'    => __( 'Additional weight multiplier for primary terms. This is usually set using your SEO plugin and will default to the first category/term returned by WordPress. CRP supports Yoast, Rank Math SEO, The SEO Framework and SEOExpress plugins that allow you to set a primary category.', 'contextual-related-posts' ),
 				'type'    => 'number',
 				'default' => 0,
-				'min'     => '0',
+				'min'     => 0,
 				'size'    => 'small',
 				'pro'     => true,
 			),
@@ -693,8 +691,8 @@ class Settings {
 				/* translators: 1: Number. */
 				'desc'    => sprintf( esc_html__( 'This sets the maximum words of the post content that will be matched. Set to 0 for no limit. Max value: %1$s.', 'contextual-related-posts' ), CRP_MAX_WORDS ),
 				'type'    => 'number',
-				'default' => '0',
-				'min'     => '0',
+				'default' => 0,
+				'min'     => 0,
 				'max'     => CRP_MAX_WORDS,
 			),
 			'post_filter_header'        => array(
@@ -769,8 +767,8 @@ class Settings {
 				'name'    => esc_html__( 'Number of common terms', 'contextual-related-posts' ),
 				'desc'    => esc_html__( 'Enter the minimum number of common terms that have to be matched before a post is considered related.', 'contextual-related-posts' ),
 				'type'    => 'number',
-				'default' => '1',
-				'min'     => '1',
+				'default' => 1,
+				'min'     => 1,
 			),
 			'related_meta_keys'         => array(
 				'id'               => 'related_meta_keys',
@@ -864,7 +862,7 @@ class Settings {
 	 *
 	 * @return array Thumbnail settings array
 	 */
-	public function settings_thumbnail() {
+	public static function settings_thumbnail() {
 		$settings = array(
 			'post_thumb_op'      => array(
 				'id'      => 'post_thumb_op',
@@ -981,7 +979,7 @@ class Settings {
 	 *
 	 * @return array Styles settings array
 	 */
-	public function settings_styles() {
+	public static function settings_styles() {
 		$settings = array(
 			'crp_styles' => array(
 				'id'      => 'crp_styles',
@@ -1019,7 +1017,7 @@ class Settings {
 	 *
 	 * @return array Feed settings array
 	 */
-	public function settings_feed() {
+	public static function settings_feed() {
 		$settings = array(
 			'feed_options_desc'  => array(
 				'id'   => 'feed_options_desc',
@@ -1093,7 +1091,7 @@ class Settings {
 	 *
 	 * @return array WooCommerce settings array
 	 */
-	public function settings_woocommerce() {
+	public static function settings_woocommerce() {
 		$settings = array(
 			'wc_header'               => array(
 				'id'   => 'wc_header',
@@ -1280,7 +1278,7 @@ class Settings {
 	 *
 	 * @return array Performance settings array
 	 */
-	public function settings_performance() {
+	public static function settings_performance() {
 		$custom_tables_desc = sprintf(
 			/* translators: 1: Opening a tag, 2: Closing a tag */
 			esc_html__( 'Efficient Content Storage and Indexing (ECSI) creates a dedicated database table optimized for related content queries. This enhances performance, particularly on sites with a large number of posts or high traffic. To create the ECSI tables, visit the %1$sTools tab%2$s.', 'contextual-related-posts' ),
@@ -1642,6 +1640,11 @@ class Settings {
 		// Force thumb_width and thumb_height if either are zero.
 		if ( empty( $settings['thumb_width'] ) || empty( $settings['thumb_height'] ) ) {
 			list( $settings['thumb_width'], $settings['thumb_height'] ) = \WebberZone\Contextual_Related_Posts\Frontend\Media_Handler::get_thumb_size( $settings['thumb_size'] );
+		}
+
+		// Force limit to 6 if left blank to prevent array_slice errors.
+		if ( empty( $settings['limit'] ) ) {
+			$settings['limit'] = '6';
 		}
 
 		if ( isset( $_POST['crp_save_clear_cache'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing

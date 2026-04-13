@@ -238,6 +238,8 @@ class Settings_Form {
 	 * @param array $args Array of arguments.
 	 */
 	public function callback_color( $args ) {
+		// Add color-field class for wpColorPicker initialization.
+		$args['field_class'] = isset( $args['field_class'] ) ? $args['field_class'] . ' color-field' : 'color-field';
 		$this->callback_text( $args );
 	}
 
@@ -842,8 +844,8 @@ class Settings_Form {
 
 		ob_start();
 		?>
-		<div class="<?php echo esc_attr( $class ); ?> wz-repeater-wrapper" id="<?php echo esc_attr( $args['id'] ); ?>-wrapper" <?php echo $attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
-			<div class="<?php echo esc_attr( $args['id'] ); ?>-items">
+		<div class="<?php echo esc_attr( $class ); ?> wz-repeater-wrapper" id="<?php echo esc_attr( $args['id'] ); ?>-wrapper" data-index="<?php echo esc_attr( (string) count( $value ) ); ?>" data-live-update-field="<?php echo esc_attr( ! empty( $args['live_update_field'] ) ? $args['live_update_field'] : 'name' ); ?>" data-fallback-title="<?php echo esc_attr( ! empty( $args['new_item_text'] ) ? $args['new_item_text'] : $this->translation_strings['repeater_new_item'] ); ?>" <?php echo $attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+			<div class="<?php echo esc_attr( $args['id'] ); ?>-items wz-repeater-items">
 				<?php
 				if ( ! empty( $value ) ) {
 					foreach ( array_values( $value ) as $index => $item ) {
@@ -860,83 +862,6 @@ class Settings_Form {
 				<?php $this->render_repeater_item( $args, '{{INDEX}}' ); ?>
 			</script>
 		</div>
-
-		<script>
-		jQuery(document).ready(function($) {
-			var wrapper = $('#<?php echo esc_js( $args['id'] ); ?>-wrapper');
-			var itemsContainer = wrapper.find('.<?php echo esc_js( $args['id'] ); ?>-items');
-			var index = <?php echo esc_js( (string) count( $value ) ); ?>;
-
-			// Add Item
-			wrapper.on('click', '.add-item', function() {
-				var template = wrapper.find('.repeater-template').html();
-				template = template.replace(/{{INDEX}}/g, index);
-				itemsContainer.append(template);
-				index++;
-
-				// Ensure the toggle icon for the new item is set to the collapsed state (▲)
-				itemsContainer.find('.repeater-item-header:last .toggle-icon').text('▲');
-
-				// Ensure that .repeater-item-content is set to display:block
-				itemsContainer.find('.repeater-item-content:last').css('display', 'block');
-			});
-
-			// Remove Item
-			wrapper.on('click', '.remove-item', function() {
-				$(this).closest('.wz-repeater-item').remove();
-				reindexItems();
-			});
-
-			// Move Up
-			wrapper.on('click', '.move-up', function() {
-				var item = $(this).closest('.wz-repeater-item');
-				var prev = item.prev();
-				if (prev.length) {
-					item.insertBefore(prev);
-					reindexItems();
-				}
-			});
-
-			// Move Down
-			wrapper.on('click', '.move-down', function() {
-				var item = $(this).closest('.wz-repeater-item');
-				var next = item.next();
-				if (next.length) {
-					item.insertAfter(next);
-					reindexItems();
-				}
-			});
-
-			// Toggle Accordion
-			wrapper.on('click', '.repeater-item-header', function() {
-				var $this = $(this);
-				var $toggleIcon = $this.find('.toggle-icon');
-				var $content = $this.next('.repeater-item-content');
-
-				// Check if content is currently visible or hidden, and toggle accordingly
-				if ($content.is(':visible')) {
-					$content.slideUp();
-					$toggleIcon.text('▼');  // Expanded state
-				} else {
-					$content.slideDown();
-					$toggleIcon.text('▲');  // Collapsed state
-				}
-			});
-
-			// Reindex Items After Adding, Removing, or Moving
-			function reindexItems() {
-				itemsContainer.find('.wz-repeater-item').each(function(idx) {
-					$(this).find(':input').each(function() {
-						var name = $(this).attr('name');
-						if (name) {
-							name = name.replace(/\[\d+\]/, '[' + idx + ']');
-							$(this).attr('name', name);
-						}
-					});
-				});
-			}
-		});
-		</script>
 		<?php
 		$html  = ob_get_clean();
 		$html .= $this->get_field_description( $args );
@@ -953,18 +878,33 @@ class Settings_Form {
 	 * @param array|null $item  Item data if exists.
 	 * @return void
 	 */
-	private function render_repeater_item( $args, $index, $item = null ) {
+	public function render_repeater_item( $args, $index, $item = null ) {
 		if ( empty( $args['fields'] ) || ! is_array( $args['fields'] ) ) {
 			return;
 		}
 
+		$fallback_title = ! empty( $args['new_item_text'] ) ? $args['new_item_text'] : $this->translation_strings['repeater_new_item'];
+
+		// Generate or retrieve unique row ID.
+		$item_id = '';
+		if ( is_array( $item ) && isset( $item['row_id'] ) ) {
+			$item_id = $item['row_id'];
+		} elseif ( '{{INDEX}}' !== $index ) {
+			// For existing items without row_id, generate a persistent one.
+			$item_id = 'row_' . md5( $args['id'] . '_' . $index );
+		} else {
+			// For new items, use a placeholder that will be replaced.
+			$item_id = '{{ROW_ID}}';
+		}
+
 		?>
-	<div class="wz-repeater-item">
-		<div class="repeater-item-header">
+		<div class="wz-repeater-item" data-row-id="<?php echo esc_attr( $item_id ); ?>">
+			<input type="hidden" name="<?php echo esc_attr( $this->settings_key ); ?>[<?php echo esc_attr( $args['id'] ); ?>][<?php echo esc_attr( $index ); ?>][row_id]" value="<?php echo esc_attr( $item_id ); ?>" />
+			<div class="repeater-item-header">
 			<?php
 			$display_field = ! empty( $args['live_update_field'] ) ? $args['live_update_field'] : 'name';
 			?>
-			<span class="repeater-title"><?php echo esc_html( ! empty( $item['fields'][ $display_field ] ) ? $item['fields'][ $display_field ] : $this->translation_strings['repeater_new_item'] ); ?></span>
+			<span class="repeater-title"><?php echo esc_html( ! empty( $item['fields'][ $display_field ] ) ? $item['fields'][ $display_field ] : $fallback_title ); ?></span>
 			<span class="toggle-icon">▼</span>
 		</div>
 		<div class="repeater-item-content" style="display: none;">
@@ -1027,22 +967,7 @@ class Settings_Form {
 		</div>
 	</div>
 
-	<script>
-	jQuery(document).ready(function($) {
-		var wrapper = $('#<?php echo esc_js( $args['id'] ); ?>-wrapper');
-		var itemsContainer = wrapper.find('.<?php echo esc_js( $args['id'] ); ?>-items');
-
-		// Live update repeater title when the specified field changes
-		var liveUpdateField = '<?php echo esc_js( ! empty( $args['live_update_field'] ) ? $args['live_update_field'] : 'name' ); ?>';
-		wrapper.on('input', '.wz-repeater-item input[name$="[fields][' + liveUpdateField + ']"]', function() {
-			var $this = $(this);
-			var newName = $this.val();
-			var $repeaterTitle = $this.closest('.wz-repeater-item').find('.repeater-title');
-			$repeaterTitle.text(newName || '<?php echo esc_js( $this->translation_strings['repeater_new_item'] ); ?>'); // Update title or set default if empty
-		});
-	});
-	</script>
-		<?php
+			<?php
 	}
 
 
