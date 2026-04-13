@@ -79,14 +79,5 @@
                  '<div class="meta  meta-header-image clearfix">';
         } // End of custom header
 
-    echo '<div class="meta-search-form">';
-		 get_search_form();
-		 echo'</div>';
-	if (is_user_logged_in()) {
-		if ( current_user_can('edit_post', 123) ) {
-				echo '<a href="'.get_home_url().'/wp-admin/post-new.php" target="_self" class="add-post-link"><small><span class="add-post-link-plus">+</span><span class="add-post-link-text">&nbsp;';
-		 	_e('Add post', 'wikiwp');
-			echo '</span></small></a>';
-		}
-	}
+
 	echo '</div>'; // End of .meta
